@@ -1,0 +1,16 @@
+{
+  "name": "com.axtuki1.facial-anim-editor",
+  "displayName": "FacialAnimationEditor",
+  "version": "0.0.1",
+  "unity": "2022.3",
+  "author": {
+    "name": "axtuki1",
+    "email": "contact@axtuki1.com"
+  },
+  "gitDependencies": {},
+  "legacyFolders": {},
+  "legacyFiles": {},
+  "vpmDependencies": {
+    "com.vrchat.avatars": ">=3.8.0"
+  }
+}

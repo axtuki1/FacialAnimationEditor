@@ -1,0 +1,8 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <Style src="project://database/Packages/com.axtuki1.facial-anim-editor/Editor/BlendshapeListItem.uss?fileID=7433441132597879392&amp;guid=f2072af5cb9768148874397914594e53&amp;type=3#BlendshapeListItem" />
+    <ui:VisualElement name="BlendshapeListItem" style="flex-grow: 0; flex-direction: row; flex-shrink: 0;">
+        <ui:Toggle name="BlendshapeEnable" />
+        <ui:Slider label="Slider" high-value="100" direction="Horizontal" name="BlendshapeWeight" show-input-field="false" inverted="false" style="flex-direction: row; flex-grow: 1;" />
+        <ui:FloatField value="0" name="BlendshapeWeightInput" style="width: 40px; max-width: 40px; min-width: 40px; margin-right: 1px; margin-left: 1px;" />
+    </ui:VisualElement>
+</ui:UXML>
