@@ -289,7 +289,7 @@ namespace AX.FacialAnimationEditor
                     }
                     else
                     {
-                        renderer.SetBlendShapeWeight(i, 0f);
+                        renderer.SetBlendShapeWeight(i, item.defaultWeight);
                     }
                 }
             }
@@ -334,7 +334,7 @@ namespace AX.FacialAnimationEditor
                     var item = new BlendshapeItem(name, weight);
                     items.Add(item);
                     filteredItems.Add(item);
-                    previewMeshObject.GetComponent<SkinnedMeshRenderer>().SetBlendShapeWeight(i, 0f);
+                    previewMeshObject.GetComponent<SkinnedMeshRenderer>().SetBlendShapeWeight(i, weight);
                 }
             }
         }
@@ -499,13 +499,14 @@ namespace AX.FacialAnimationEditor
     public class BlendshapeItem
     {
         public string name;
-        public float weight;
+        public float weight, defaultWeight;
         public bool isSelected;
 
         public BlendshapeItem(string name, float weight)
         {
             this.name = name;
             this.weight = weight;
+            this.defaultWeight = weight;
             isSelected = false;
         }
     }
