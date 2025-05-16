@@ -27,7 +27,10 @@
                     <ui:Slider label="Field of View" high-value="10" name="PreviewCamFOV" low-value="0.5" show-input-field="true" inverted="true" />
                 </ui:VisualElement>
                 <ui:VisualElement name="OB_BS_Selector" style="flex-grow: 1; flex-direction: column; height: 100%; min-width: 400px;">
-                    <uie:ObjectField label="Target Mesh" type="UnityEngine.SkinnedMeshRenderer, UnityEngine.CoreModule" name="TargetMesh" />
+                    <ui:VisualElement name="MeshMenu" style="flex-grow: 0; flex-direction: row;">
+                        <uie:ObjectField label="Target Mesh" type="UnityEngine.SkinnedMeshRenderer, UnityEngine.CoreModule" name="TargetMesh" style="flex-grow: 1;" />
+                        <ui:Button text="Reset" parse-escape-sequences="true" display-tooltip-when-elided="true" name="ResetBtn" tooltip="Scene上のTargetMeshの状態に戻します。" />
+                    </ui:VisualElement>
                     <ui:VisualElement name="BlendshapeListWrapper" style="flex-grow: 1; flex-direction: row; width: 100%;">
                         <ui:VisualElement name="TargetBlendshapeWrapper" style="flex-grow: 0; padding-top: 5px; padding-right: 3px; padding-bottom: 5px; padding-left: 5px; width: 50%; flex-shrink: 0;">
                             <ui:VisualElement name="TargetBlendshapeSearchWrapper" style="flex-grow: 0; flex-shrink: 1; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; flex-basis: auto; width: 100%; min-width: 0; min-height: 0; align-items: stretch;">

@@ -26,7 +26,7 @@ namespace AX.FacialAnimationEditor
         private Vector3Field offset;
         private VisualTreeAsset blendshapeListItem;
         private ToolbarSearchField blendshapeSearch, targetBlendshapeSearch;
-        private Button animationLoadBtn, animationSaveBtn, animationSaveNewFileBtn;
+        private Button animationLoadBtn, animationSaveBtn, animationSaveNewFileBtn, resetBtn;
 
         private PreviewRenderUtility previewUtility;
         private GameObject previewObjectRoot;
@@ -245,8 +245,26 @@ namespace AX.FacialAnimationEditor
             fov = rootVisualElement.Q<Slider>("PreviewCamFOV");
             fov.RegisterValueChangedCallback(evt => { previewCameraFov = evt.newValue; });
             fov.SetValueWithoutNotify(previewCameraFov);
+            
+            resetBtn = rootVisualElement.Q<Button>("ResetBtn");
+            
+            resetBtn.RegisterCallback<ClickEvent>(evt =>
+            {
+                AllItemsReset();
+            });
 
             viewUpdate();
+        }
+
+        internal void AllItemsReset()
+        {
+            for (int i = 0; i < items.Count; i++)
+            {
+                var item = items[i];
+                item.weight = item.defaultWeight;
+                item.isSelected = false;
+            }
+            ApplyBlendshapeFilter();
         }
 
         internal void ApplyBlendshapeFilter()
@@ -371,6 +389,7 @@ namespace AX.FacialAnimationEditor
         private void AnimationLoadBtnClick(ClickEvent evt)
         {
             if (targetAnimation.value == null) return;
+            AllItemsReset();
             LoadFromClip((AnimationClip)targetAnimation.value);
         }
         
