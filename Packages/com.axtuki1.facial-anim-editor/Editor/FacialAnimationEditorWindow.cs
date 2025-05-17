@@ -148,7 +148,7 @@ namespace AX.FacialAnimationEditor
             blendshapeList.bindItem = (element, i) =>
             {
                 var index = i;
-                var item = items[index];
+                var item = filteredItems[index];
                 var itemUI = element as BlendshapeItemUI;
                 itemUI?.Setup(item, index);
             };
