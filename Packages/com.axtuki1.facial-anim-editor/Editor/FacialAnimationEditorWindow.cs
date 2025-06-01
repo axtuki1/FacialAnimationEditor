@@ -10,8 +10,8 @@ namespace AX.FacialAnimationEditor
 {
     public class FacialAnimationEditorWindow : EditorWindow, IHasCustomMenu
     {
-
         private static readonly string packagePath = "Packages/com.axtuki1.facial-anim-editor/Editor";
+        private static readonly Vector2 DEF_MINSIZE = new Vector2(890, 650);
 
         private List<BlendshapeItem> items = new List<BlendshapeItem>();
         private List<BlendshapeItem> filteredItems = new List<BlendshapeItem>();
@@ -44,11 +44,41 @@ namespace AX.FacialAnimationEditor
             menu.AddItem(new GUIContent("Reload"), false, () => { GUIReload(); });
         }
 
+        [MenuItem("GameObject/FacialAnimationEditor/Rootとして開く", false, 20)]
+        public static void ObjectSelectedShowWindow()
+        {
+            var window = GetWindow<FacialAnimationEditorWindow>("Facial Animation Editor");
+            window.minSize = DEF_MINSIZE;
+
+            if (Selection.activeGameObject != null)
+            {
+                window.objectRoot.value = Selection.activeGameObject;
+            }
+        }
+
+        [MenuItem("GameObject/FacialAnimationEditor/編集対象Meshとして開く", false, 20)]
+        public static void MeshSelectedShowWindow()
+        {
+            var window = GetWindow<FacialAnimationEditorWindow>("Facial Animation Editor");
+            window.minSize = DEF_MINSIZE;
+
+            if (Selection.activeGameObject != null)
+            {
+                var rootObject = Selection.activeGameObject.transform.root.gameObject;
+                if (window.objectRoot.value == null || window.objectRoot.value != rootObject)
+                {
+                    window.objectRoot.value = rootObject;
+                }
+
+                window.targetMesh.value = Selection.activeGameObject;
+            }
+        }
+
         [MenuItem("Window/Facial Animation Editor")]
         public static void ShowWindow()
         {
             var window = GetWindow<FacialAnimationEditorWindow>("Facial Animation Editor");
-            window.minSize = new Vector2(890, 650);
+            window.minSize = DEF_MINSIZE;
         }
 
         public void OnEnable()
@@ -85,6 +115,7 @@ namespace AX.FacialAnimationEditor
                 {
                     DestroyImmediate(previewObjectRoot);
                 }
+
                 if (oldRoot == null)
                 {
                     targetMesh.value = null;
@@ -96,6 +127,7 @@ namespace AX.FacialAnimationEditor
                     viewUpdate();
                     return;
                 }
+
                 previewObjectRoot = Instantiate(oldRoot);
                 previewUtility.AddSingleGO(previewObjectRoot);
                 viewUpdate();
@@ -103,7 +135,7 @@ namespace AX.FacialAnimationEditor
 
             nonSelected = rootVisualElement.Q<VisualElement>("NonAnimationRootSelectedArea");
             selected = rootVisualElement.Q<VisualElement>("SelectedArea");
-            
+
             targetAnimation = rootVisualElement.Q<ObjectField>("TargetAnimation");
 
             targetMesh = rootVisualElement.Q<ObjectField>("TargetMesh");
@@ -155,13 +187,13 @@ namespace AX.FacialAnimationEditor
 
             blendshapeListItem =
                 AssetDatabase.LoadAssetAtPath<VisualTreeAsset>($"{packagePath}/BlendshapeListItem.uxml");
-            
+
             targetBlendshapeList = rootVisualElement.Q<ListView>("TargetBlendshapeList");
-            
+
             targetBlendshapeList.itemsSource = targetedItems;
-            
+
             targetBlendshapeList.makeItem = () => new BlendshapeItemUI(this, blendshapeListItem);
-            
+
             targetBlendshapeList.bindItem = (element, i) =>
             {
                 var index = i;
@@ -174,7 +206,6 @@ namespace AX.FacialAnimationEditor
 
             previewContainer.onGUIHandler = () =>
             {
-
                 previewUtility.cameraFieldOfView = previewCameraFov;
 
                 if (previewMeshObject == null)
@@ -185,21 +216,26 @@ namespace AX.FacialAnimationEditor
 
                 var renderer = previewMeshObject.GetComponent<SkinnedMeshRenderer>();
 
-                if (renderer == null)
+                if (
+                    renderer == null ||
+                    float.IsNaN(previewContainer.contentRect.width) || 
+                    float.IsNaN(previewContainer.contentRect.height)
+                    )
                 {
                     DrawEmptyPreview(previewContainer.contentRect);
                     return;
                 }
-
+                
                 previewUtility.BeginPreview(
                     new Rect(
                         previewContainer.contentRect.x,
                         previewContainer.contentRect.y,
-                        previewContainer.contentRect.width * 2,
-                        previewContainer.contentRect.height * 2
+                        float.IsNaN(previewContainer.contentRect.width) ? 0 : previewContainer.contentRect.width * 2,
+                        float.IsNaN(previewContainer.contentRect.height) ? 0 : previewContainer.contentRect.height * 2
                     ),
                     GUIStyle.none
                 );
+
 
                 var cam = previewUtility.camera;
                 cam.transform.position =
@@ -214,28 +250,22 @@ namespace AX.FacialAnimationEditor
 
             blendshapeSearch = rootVisualElement.Q<ToolbarSearchField>("BlendshapeSearch");
 
-            blendshapeSearch.RegisterValueChangedCallback(evt =>
-            {
-                ApplyBlendshapeFilter();
-            });
-            
+            blendshapeSearch.RegisterValueChangedCallback(evt => { ApplyBlendshapeFilter(); });
+
             targetBlendshapeSearch = rootVisualElement.Q<ToolbarSearchField>("TargetBlendshapeSearch");
 
-            targetBlendshapeSearch.RegisterValueChangedCallback(evt =>
-            {
-                ApplyBlendshapeFilter();
-            });
+            targetBlendshapeSearch.RegisterValueChangedCallback(evt => { ApplyBlendshapeFilter(); });
 
             animationLoadBtn = rootVisualElement.Q<Button>("AnimationLoadBtn");
-            
+
             animationLoadBtn.RegisterCallback<ClickEvent>(AnimationLoadBtnClick);
-            
+
             animationSaveBtn = rootVisualElement.Q<Button>("AnimationSaveBtn");
 
             animationSaveBtn.RegisterCallback<ClickEvent>(AnimationSaveBtnClick);
 
             animationSaveNewFileBtn = rootVisualElement.Q<Button>("AnimationSaveNewFileBtn");
-            
+
             animationSaveNewFileBtn.RegisterCallback<ClickEvent>(AnimationSaveNewFileBtnClick);
 
             offset = rootVisualElement.Q<Vector3Field>("PreviewCamOffset");
@@ -245,13 +275,10 @@ namespace AX.FacialAnimationEditor
             fov = rootVisualElement.Q<Slider>("PreviewCamFOV");
             fov.RegisterValueChangedCallback(evt => { previewCameraFov = evt.newValue; });
             fov.SetValueWithoutNotify(previewCameraFov);
-            
+
             resetBtn = rootVisualElement.Q<Button>("ResetBtn");
-            
-            resetBtn.RegisterCallback<ClickEvent>(evt =>
-            {
-                AllItemsReset();
-            });
+
+            resetBtn.RegisterCallback<ClickEvent>(evt => { AllItemsReset(); });
 
             viewUpdate();
         }
@@ -264,6 +291,7 @@ namespace AX.FacialAnimationEditor
                 item.weight = item.defaultWeight;
                 item.isSelected = false;
             }
+
             ApplyBlendshapeFilter();
         }
 
@@ -271,7 +299,7 @@ namespace AX.FacialAnimationEditor
         {
             string keyword = blendshapeSearch.value.Trim().ToLower();
             string targetKeyword = targetBlendshapeSearch.value.Trim().ToLower();
-    
+
             filteredItems.Clear();
             targetedItems.Clear();
 
@@ -282,10 +310,13 @@ namespace AX.FacialAnimationEditor
                 {
                     filteredItems.Add(item);
                 }
-                if ((string.IsNullOrEmpty(targetKeyword) || item.name.ToLower().Contains(targetKeyword)) && item.isSelected)
+
+                if ((string.IsNullOrEmpty(targetKeyword) || item.name.ToLower().Contains(targetKeyword)) &&
+                    item.isSelected)
                 {
                     targetedItems.Add(item);
                 }
+
                 UpdateBlendshape(i);
             }
 
@@ -323,7 +354,6 @@ namespace AX.FacialAnimationEditor
 
         private void viewUpdate()
         {
-
             if (objectRoot.value != null)
             {
                 selected.style.display = DisplayStyle.Flex;
@@ -334,7 +364,6 @@ namespace AX.FacialAnimationEditor
                 selected.style.display = DisplayStyle.None;
                 nonSelected.style.display = DisplayStyle.Flex;
             }
-
         }
 
         private void RegisterBlendshapeList()
@@ -385,14 +414,14 @@ namespace AX.FacialAnimationEditor
         {
             return root.Find(relativePath); // UnityのTransform.Findはスラッシュ区切りに対応
         }
-        
+
         private void AnimationLoadBtnClick(ClickEvent evt)
         {
             if (targetAnimation.value == null) return;
             AllItemsReset();
             LoadFromClip((AnimationClip)targetAnimation.value);
         }
-        
+
         private void LoadFromClip(AnimationClip clip)
         {
             if (clip == null) return;
@@ -402,13 +431,13 @@ namespace AX.FacialAnimationEditor
                 ((GameObject)objectRoot.value).transform,
                 ((SkinnedMeshRenderer)targetMesh.value).transform
             );
-            
+
             foreach (var binding in bindings)
             {
                 if (binding.type != typeof(SkinnedMeshRenderer)) continue;
 
                 if (!binding.propertyName.StartsWith("blendShape.")) continue;
-                
+
                 if (binding.path != expectedPath) continue;
 
                 string blendshapeName = binding.propertyName.Replace("blendShape.", "");
@@ -428,7 +457,7 @@ namespace AX.FacialAnimationEditor
 
             ApplyBlendshapeFilter();
         }
-        
+
         private void AnimationSaveBtnClick(ClickEvent evt)
         {
             var clip = targetAnimation.value as AnimationClip;
@@ -444,7 +473,7 @@ namespace AX.FacialAnimationEditor
                 if (isOverwrite)
                 {
                     var path = AssetDatabase.GetAssetPath(clip);
-                    
+
                     var newClip = new AnimationClip();
                     ApplyToClip(newClip);
 
@@ -459,7 +488,7 @@ namespace AX.FacialAnimationEditor
                 EditorUtility.DisplayDialog("エラー", "AnimationClipが指定されていません", "OK");
             }
         }
-        
+
         private void AnimationSaveNewFileBtnClick(ClickEvent evt)
         {
             string path = EditorUtility.SaveFilePanelInProject(
@@ -475,12 +504,12 @@ namespace AX.FacialAnimationEditor
                 AssetDatabase.CreateAsset(newClip, path);
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
-                
+
                 targetAnimation.value = newClip;
             }
         }
 
-        
+
         private void ApplyToClip(AnimationClip clip)
         {
             var mesh = (targetMesh.value as SkinnedMeshRenderer)?.sharedMesh;
@@ -493,7 +522,7 @@ namespace AX.FacialAnimationEditor
             {
                 var path = GetRelativePath(((GameObject)objectRoot.value).transform,
                     ((SkinnedMeshRenderer)targetMesh.value).transform);
-        
+
                 // 書き出すアニメーションカーブ
                 var curve = new AnimationCurve();
                 curve.AddKey(new Keyframe(0f, item.weight));
@@ -502,7 +531,7 @@ namespace AX.FacialAnimationEditor
                 // `blendShape.<name>` がターゲットプロパティ名！
                 clip.SetCurve(path, typeof(SkinnedMeshRenderer), $"blendShape.{item.name}", curve);
             }
-            
+
             // ループ設定
             AnimationClipSettings clipSettings = AnimationUtility.GetAnimationClipSettings(clip);
             clipSettings.loopTime = true;
@@ -544,18 +573,18 @@ namespace AX.FacialAnimationEditor
         {
             this.item = item;
             this.index = index;
-            
+
             toggle.SetValueWithoutNotify(item.isSelected);
             slider.label = item.name;
             slider.SetValueWithoutNotify(item.weight);
             inputfield.SetValueWithoutNotify(item.weight);
         }
-        
+
         public BlendshapeItemUI(FacialAnimationEditorWindow window, VisualTreeAsset blendshapeListItem)
         {
             this.window = window;
             blendshapeListItem.CloneTree(this);
-            
+
             toggle = this.Q<Toggle>("BlendshapeEnable");
             slider = this.Q<Slider>("BlendshapeWeight");
             inputfield = this.Q<FloatField>("BlendshapeWeightInput");
@@ -584,6 +613,5 @@ namespace AX.FacialAnimationEditor
                 this.window.ApplyBlendshapeFilter();
             });
         }
-
     }
 }
